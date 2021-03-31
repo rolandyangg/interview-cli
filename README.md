@@ -51,6 +51,8 @@ This will prompt you with a setup to enter the code you were given before, do th
 
 ![testspassed1](img/testspassed1.png)
 
+**In order to submit your code, choose the file format you want to write your solution in and write it in the answers folder under the corresponding language file you want to write it in**
+
 # Known Bugs
 
 - Invalid inputs will crash the program (see future plans)
