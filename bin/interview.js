@@ -120,7 +120,7 @@ function askQuestion(code, currentQuestion) {
     DATABASE.collection('questions').where('question', '==', currentQuestion).get().then((data) => {
         if (data.docs.length != 0) { // question exists
             var docdata = data.docs[0].data();
-            console.log(`\nQuestion #${currentQuestion}: ${docdata.name}\n\n${docdata.description}\nEx. ${docdata.testInput[0]} -> ${docdata.testOutput[0]}`); // Ask question
+            console.log(`\nQuestion #${currentQuestion}: ${docdata.name}\nDifficulty: ${docdata.difficulty}\n\n${docdata.description}\nEx. ${docdata.testInput[0]} -> ${docdata.testOutput[0]}\n`); // Ask question
             // Give choices
             inquirer
                 .prompt([{
@@ -178,9 +178,8 @@ function askTests(code, currentQuestion) {
             var answer = answers.choice;
             switch (answer) {
                 case "Java":
-                    // runTests("java", "./answers/answer.java", code, currentQuestion);
-                    console.log("Currently Java is not supported!");
-                    askQuestion(code, currentQuestion);
+                    cp.exec('javac', ['./answers/answer.java']); // compile java code, potentially won't compile correctly and may need second run because not synchronous?
+                    runTests("java", "./answers/answer.java", code, currentQuestion);
                     break;
                 case "Python":
                     runTests("python", "./answers/answer.py", code, currentQuestion);
@@ -189,14 +188,12 @@ function askTests(code, currentQuestion) {
                     runTests("node", "./answers/answer.js", code, currentQuestion);
                     break;
                 case "C":
-                    // runTests("c", "./answers/answer.c", code, currentQuestion);
-                    console.log("Currently C is not supported!");
-                    askQuestion(code, currentQuestion);
+                    cp.exec('gcc', ['./answers/answer.c', '-o', 'answerc']); // compile
+                    runTests("./answerc", "", code, currentQuestion);
                     break;
                 case "C++":
-                    // runTests("c++", "./answers/answer.cpp", code, currentQuestion);
-                    console.log("Currently C++ is not supported!");
-                    askQuestion(code, currentQuestion);
+                    cp.exec('g++', ['./answers/answer.cpp', '-o', 'answercp']); // compile
+                    runTests("./answercp", "", code, currentQuestion);
                     break;
                 default:
                     console.log("Wuh woh error"); // lol fun error hopefully this doesn't occur

@@ -84,7 +84,7 @@ function menu() {
             type: 'rawlist',
             name: 'choice',
             message: 'What would you like to do?',
-            choices: ['Create New Interview', 'Add New Question', 'Exit']
+            choices: ['Create New Interview', 'Add New Question', 'Delete Question', 'Delete Session', 'View All Sessions', 'Exit']
         }])
         .then(answers => {
             console.clear();
@@ -93,6 +93,12 @@ function menu() {
                 createInterview();
             else if (answer === 'Add New Question')
                 menu();
+            else if (answer === 'Delete Question')
+                deleteQuestion();
+            else if (answer === 'Delete Session')
+                deleteQuestion();
+            else if (answer === 'View All Sessions')
+                viewSessions();
             else if (answer === 'Exit') {
                 console.log("Goodbye!");
                 process.exit();
@@ -130,7 +136,14 @@ function createInterview() {
             }
         ])
         .then(answers => {
-            DATABASE.collection('sessions').add({
+            DATABASE.collection('questions').get().then((data2) => { // Get the maximum possible score
+                var maxPoints = 0;
+                data2.docs.forEach(doc => {
+                    let docdata2 = doc.data();
+                    maxPoints += docdata2.testOutput.length;
+                    maxPoints += docdata2.hiddenOutput.length;
+                });
+                DATABASE.collection('sessions').add({
                     name: answers.name,
                     email: answers.email,
                     hoursGiven: answers.hours,
@@ -139,14 +152,15 @@ function createInterview() {
                     startTime: null,
                     endTime: null,
                     submitTime: null,
-                    results: []
+                    results: [],
+                    finalScore: 0,
+                    maxScore: maxPoints
                 })
                 .then(docRef => {
                     console.clear();
                     emailInterview(docRef);
-                    // console.log(`Your unique code for this interview is: ${docRef.id}\nGive this to the interviewee (DO NOT LOSE IT)\n`)
-                    // menu();
                 })
+            })
         })
         .catch(error => {
             console.log(error);
@@ -163,10 +177,36 @@ function addQuestion() {
 }
 
 /**
+ * Prompt the user to delete a session from the database
+ */
+function deleteSession() {
+    console.clear();
+    console.log("This is currently under development!\n");
+    menu();
+}
+
+/**
+ * Prompt the user to delete a question from the database
+ */
+function deleteQuestion() {
+    console.clear();
+    console.log("This is currently under development!\n");
+    menu();
+}
+
+/**
  * Displays all the sessions stored in the database
  */
 function viewSessions() {
-    
+    DATABASE.collection('sessions').get().then(data => {
+        console.clear();
+        console.log("Current Sessions: \n");
+        data.docs.forEach(doc => {
+            let docdata = doc.data();
+            console.log(`Session ID: ${doc.id}\nName: ${docdata.name}\nEmail: ${docdata.email}\nStarted: ${docdata.startTime != null}\nSubmitted: ${docdata.submitTime != null}\nScore: ${docdata.finalScore}/${docdata.maxScore}\n`);
+        })
+        menu();
+    })
 }
 
 /**
@@ -187,7 +227,7 @@ function emailInterview(docRef) {
             if (err) {
                 console.log('An email error occured... Please make a new session and be sure to check the email address\n');
             } else {
-                console.log(`An invite has successfully been sent to the applicant at ${data.email}!\n`);
+                console.log(`An invite has successfully been sent to the applicant at: ${data.email}\n`);
             }
             console.log(`Your unique code for this interview is: ${docRef.id}\nGive this to the interviewee (DO NOT LOSE IT)\n`);
             menu();
