@@ -352,7 +352,7 @@ function endInterview(code) {
             let mailOptionsInterviewee = {
                 from: 'clicodeinterview@gmail.com',
                 to: docdata.email,
-                subject: `Here's How You Did On Your Interview!`,
+                subject: `Here's How You Did On Your Interview`,
                 text: `Hey ${docdata.name}!\n\nGreat job on your interview!\nHere's your detailed breakdown: \n\n` + message + `If you have any questions or concerns feel free to reply to this email or contact us.\n-The CLI Interview Team`
             }
             console.log("Emailing reports...\n");
@@ -400,7 +400,7 @@ function msToTime(duration) {
  * @param {*} time 
  */
 function getFormattedTime(time) {
-    var today = new Date();
+    var today = time;
     var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
     var time = today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();
     return date + ' ' + time;

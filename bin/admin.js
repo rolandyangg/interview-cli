@@ -276,7 +276,7 @@ function emailInterview(docRef) {
  * @param {*} time 
  */
 function getFormattedTime(time) {
-    var today = new Date();
+    var today = time;
     var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
     var time = today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();
     return date + ' ' + time;
