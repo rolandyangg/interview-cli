@@ -170,7 +170,7 @@ function createInterview() {
  */
 function addQuestion() {
     console.clear();
-    console.log("This is currently under development!\n");
+    console.log("This is currently under development!T\n");
     menu();
 }
 
@@ -225,7 +225,7 @@ function deleteSession() {
  */
 function deleteQuestion() {
     console.clear();
-    console.log("This is currently under development!\n");
+    console.log("This feature has temporarily been disabled to avoid any bugs!\n");
     menu();
 }
 

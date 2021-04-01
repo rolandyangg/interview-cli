@@ -301,7 +301,7 @@ function submitQuestion(code, currentQuestion, results) {
                 currentQuestion: currentQuestion,
                 results: newResults
             })
-            console.log("Submitted!\n");
+            console.log("Submitted!");
             askQuestion(code, currentQuestion);
         }
     })
