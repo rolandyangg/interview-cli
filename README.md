@@ -13,9 +13,9 @@ cd into the cloned repository on your computer
 
 You may use your command line of choice
 
-** You must be CD'd into the repository else you will be unable to grade your code**
+**You must be CD'd into the repository else you will be unable to grade your code**
 
-** Make sure your Enviornment Variables and Paths are correctly setup else the program will crash when you try to run test cases **
+**Make sure your Enviornment Variables and Paths are correctly setup else the program will crash when you try to run test cases**
 
 Use npm and install the following packages
 ```bash
