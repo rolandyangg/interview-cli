@@ -30,6 +30,17 @@ DATABASE.settings({
     timestampsInSnapshots: true
 });
 
+// Email
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'clicodeinterview@gmail.com', // remove credentials later, this is temporary
+        pass: 'ZaVF((^m-3S@%{*?'
+    }
+})
+
 /* BODY */
 
 /*
@@ -55,8 +66,7 @@ inquirer
         if (answers.password === PASSWORD) {
             console.log("Welcome Admin!\n")
             menu();
-        }
-        else {
+        } else {
             console.log("Incorrect password!");
         }
     })
@@ -98,8 +108,7 @@ function menu() {
  */
 function createInterview() {
     inquirer
-        .prompt([
-            {
+        .prompt([{
                 type: 'input',
                 name: 'name',
                 message: 'What is the name of the person this interview is for?: ',
@@ -122,21 +131,22 @@ function createInterview() {
         ])
         .then(answers => {
             DATABASE.collection('sessions').add({
-                name: answers.name,
-                email: answers.email,
-                hoursGiven: answers.hours,
-                minutesGiven: answers.minutes,
-                currentQuestion: 0,
-                startTime: null,
-                endTime: null,
-                submitTime: null,
-                results: []
-            })
-            .then(docRef => {
-                console.clear();
-                console.log(`Your unique code for this interview is: ${docRef.id}\nGive this to the interviewee (DO NOT LOSE IT)\n`)
-                menu();
-            })
+                    name: answers.name,
+                    email: answers.email,
+                    hoursGiven: answers.hours,
+                    minutesGiven: answers.minutes,
+                    currentQuestion: 0,
+                    startTime: null,
+                    endTime: null,
+                    submitTime: null,
+                    results: []
+                })
+                .then(docRef => {
+                    console.clear();
+                    emailInterview(docRef);
+                    // console.log(`Your unique code for this interview is: ${docRef.id}\nGive this to the interviewee (DO NOT LOSE IT)\n`)
+                    // menu();
+                })
         })
         .catch(error => {
             console.log(error);
@@ -150,4 +160,37 @@ function addQuestion() {
     console.clear();
     console.log("This is currently under development!\n");
     menu();
+}
+
+/**
+ * Displays all the sessions stored in the database
+ */
+function viewSessions() {
+    
+}
+
+/**
+ * Emails the interviee information and their code
+ * @param {*} docRef 
+ */
+function emailInterview(docRef) {
+    docRef.get().then(dataref => {
+        let data = dataref.data();
+        let mailOptions = {
+            from: 'clicodeinterview@gmail.com',
+            to: data.email,
+            subject: 'Your CLI Coding Interview is Ready!',
+            text: `Get hype ${data.name}! It's time to take your coding interview!\n\nYou have been given ${data.hoursGiven} hours and ${data.minutesGiven} minutes to complete the task.\n\nYou will be given a variety of questions of varying difficulties. Try your best to complete all of them in the given time!\n\nYour interview code is: ${docRef.id}\nBe sure not to lose this code or share it with anyone else!\n\nWhenever you're ready, head over to https://github.com/whyroland/interview-cli and follow the installation instructions and use the application to do your interview.\n\nGood luck!\n-CLI Code Interview Team`
+        };
+        console.log("Sending email to applicant...\n");
+        transporter.sendMail(mailOptions, function (err, dat) {
+            if (err) {
+                console.log('An email error occured... Please make a new session and be sure to check the email address\n');
+            } else {
+                console.log(`An invite has successfully been sent to the applicant at ${data.email}!\n`);
+            }
+            console.log(`Your unique code for this interview is: ${docRef.id}\nGive this to the interviewee (DO NOT LOSE IT)\n`);
+            menu();
+        })
+    })
 }
