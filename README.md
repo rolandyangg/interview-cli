@@ -1,5 +1,5 @@
 # interview-cli
-a coding interview command line interface application made using node.js
+Node.js Command Line Interface Application for giving coding interviews to people locally on their computers
 
 # Installation
 
