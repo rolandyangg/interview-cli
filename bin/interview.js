@@ -30,6 +30,17 @@ DATABASE.settings({
     timestampsInSnapshots: true
 });
 
+// Email
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'clicodeinterview@gmail.com', // remove credentials later, this is temporary
+        pass: 'ZaVF((^m-3S@%{*?'
+    }
+})
+
 /* BODY */
 
 console.clear();
@@ -301,10 +312,6 @@ function submitQuestion(code, currentQuestion, results) {
  * @param {*} code 
  */
 function endInterview(code) {
-    var time = new Date();
-    DATABASE.collection('sessions').doc(code).update({ // Submit time
-        submitTime: time
-    })
     DATABASE.collection('sessions').doc(code).get().then((data) => {
         var points = 0;
         var docdata = data.data();
@@ -321,8 +328,50 @@ function endInterview(code) {
                 maxPoints += docdata2.testOutput.length;
                 maxPoints += docdata2.hiddenOutput.length;
             });
-            console.log(`Great job ${docdata.name}!\nYou had a final score of ${points}/${maxPoints}!\nMore in depth results will be sent to you and your admin.\nIf you have any further questions feel free to reach out!`);
-            process.exit();
+            var time = new Date();
+            DATABASE.collection('sessions').doc(code).update({ // Submit final scores and time
+                submitTime: time,
+                score: points,
+                maxScore: maxPoints // update maxPoints in case administrator changed the questions
+            })
+            let message = `Session ID: ${code}\nName: ${docdata.name}\nSubmission Time: ${getFormattedTime(time)}\nFinal Score: ${points}/${maxPoints}\n\nStart Time: ${getFormattedTime(docdata.startTime.toDate())}\nEnd Time: ${getFormattedTime(docdata.endTime.toDate())}\n\nPerformance:\n`;
+            for (let i = 0; i < docdata.results.length; i++) { // odd bug where it submits only 1 performance
+                let testcases = docdata.results[i];
+                message += `\nQuestion ${i + 1}:\n`
+                for (let z = 0; z < testcases.length; z++) {
+                    message += `Test Case: ${z + 1}: ${testcases.substring(z, z + 1)}\n`
+                }
+                message += "\n"
+            }
+            let mailOptionsAdmin = {
+                from: 'clicodeinterview@gmail.com',
+                to: 'clicodeinterview@gmail.com',
+                subject: `Interview Report: ${code} ${docdata.name}`,
+                text: message
+            };
+            let mailOptionsInterviewee = {
+                from: 'clicodeinterview@gmail.com',
+                to: docdata.email,
+                subject: `Here's How You Did On Your Interview!`,
+                text: `Hey ${docdata.name}!\n\nGreat job on your interview!\nHere's your detailed breakdown: \n\n` + message + `If you have any questions or concerns feel free to reply to this email or contact us.\n-The CLI Interview Team`
+            }
+            console.log("Emailing reports...\n");
+            transporter.sendMail(mailOptionsInterviewee, function (err, dat) {
+                if (err) {
+                    console.log('An email error occured... Please contact an administrator for further assistance.\n');
+                } else {
+                    console.log(`A detailed report has successfully been emailed to the interviewee\n`);
+                }
+            })
+            transporter.sendMail(mailOptionsAdmin, function (err, dat) {
+                if (err) {
+                    console.log('An email error occured... Please contact an administrator for further assistance.\n');
+                } else {
+                    console.log(`A detailed report has successfully been emailed to the admin\n`);
+                }
+            })
+            console.log(`Great job ${docdata.name}!\nYou had a final score of ${points}/${maxPoints}!\nMore in depth results will be sent to you and your admin.\nIf you have any further questions feel free to reach out!\n`);
+            console.log("Once you see the messages that the email reports have been sent, press CTRL+C to exit\n");
         })
     })
 }
@@ -343,4 +392,16 @@ function msToTime(duration) {
     seconds = (seconds < 10) ? "0" + seconds : seconds;
 
     return hours + ":" + minutes + ":" + seconds;
+}
+
+/**
+ * Returns the formatted time
+ * Source: https://stackoverflow.com/questions/4744299/how-to-get-datetime-in-javascript
+ * @param {*} time 
+ */
+function getFormattedTime(time) {
+    var today = new Date();
+    var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+    var time = today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();
+    return date + ' ' + time;
 }

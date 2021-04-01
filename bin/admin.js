@@ -45,9 +45,7 @@ const transporter = nodemailer.createTransport({
 
 /*
 TODO:
-Allow admin to manage and view sessions
 Allow admin to manage and view questions
-Email user code to enter into the system
 Catch Invalid Inputs
 */
 
@@ -96,7 +94,7 @@ function menu() {
             else if (answer === 'Delete Question')
                 deleteQuestion();
             else if (answer === 'Delete Session')
-                deleteQuestion();
+                deleteSession();
             else if (answer === 'View All Sessions')
                 viewSessions();
             else if (answer === 'Exit') {
@@ -144,22 +142,22 @@ function createInterview() {
                     maxPoints += docdata2.hiddenOutput.length;
                 });
                 DATABASE.collection('sessions').add({
-                    name: answers.name,
-                    email: answers.email,
-                    hoursGiven: answers.hours,
-                    minutesGiven: answers.minutes,
-                    currentQuestion: 0,
-                    startTime: null,
-                    endTime: null,
-                    submitTime: null,
-                    results: [],
-                    finalScore: 0,
-                    maxScore: maxPoints
-                })
-                .then(docRef => {
-                    console.clear();
-                    emailInterview(docRef);
-                })
+                        name: answers.name,
+                        email: answers.email,
+                        hoursGiven: answers.hours,
+                        minutesGiven: answers.minutes,
+                        currentQuestion: 0,
+                        startTime: null,
+                        endTime: null,
+                        submitTime: null,
+                        results: [],
+                        finalScore: 0,
+                        maxScore: maxPoints
+                    })
+                    .then(docRef => {
+                        console.clear();
+                        emailInterview(docRef);
+                    })
             })
         })
         .catch(error => {
@@ -181,8 +179,45 @@ function addQuestion() {
  */
 function deleteSession() {
     console.clear();
-    console.log("This is currently under development!\n");
-    menu();
+    inquirer
+        .prompt([{
+            type: 'input',
+            name: 'code',
+            message: 'Enter in the Session ID you want to delete: ',
+        }])
+        .then(answers => {
+            console.clear();
+            DATABASE.collection('sessions').doc(answers.code).get().then((data) => {
+                if (data.data() != null) { // check if it exists
+                    let docdata = data.data();
+                    inquirer
+                        .prompt([{
+                            type: 'confirm',
+                            name: 'confirm',
+                            message: `Are you sure you want to delete the following session? Once it is deleted, it can not be recovered\nReview the session information below before confirming:\n\nSession ID: ${answers.code}\nName: ${docdata.name}\nEmail: ${docdata.email}\nStarted: ${docdata.startTime != null ? getFormattedTime(docdata.startTime.toDate()) : "false"}\nSubmitted: ${docdata.submitTime != null ? getFormattedTime(docdata.submitTime.toDate()) : "false"}\nScore: ${docdata.finalScore}/${docdata.maxScore}\n\n`,
+                        }])
+                        .then(answersc => {
+                            if (answersc.confirm) {
+                                DATABASE.collection('sessions').doc(answers.code).delete();
+                                console.clear();
+                                console.log(`Session ${answers.code} has successfully been deleted.\n`);
+                            } else {
+                                console.clear();
+                            }
+                            menu();
+                        })
+                        .catch(error => {
+                            console.log(error);
+                        });
+                } else {
+                    console.log("That session ID does not exist.\n");
+                    menu();
+                }
+            })
+        })
+        .catch(error => {
+            console.log(error);
+        });
 }
 
 /**
@@ -203,7 +238,7 @@ function viewSessions() {
         console.log("Current Sessions: \n");
         data.docs.forEach(doc => {
             let docdata = doc.data();
-            console.log(`Session ID: ${doc.id}\nName: ${docdata.name}\nEmail: ${docdata.email}\nStarted: ${docdata.startTime != null}\nSubmitted: ${docdata.submitTime != null}\nScore: ${docdata.finalScore}/${docdata.maxScore}\n`);
+            console.log(`Session ID: ${doc.id}\nName: ${docdata.name}\nEmail: ${docdata.email}\nStarted: ${docdata.startTime != null ? getFormattedTime(docdata.startTime.toDate()) : "false"}\nSubmitted: ${docdata.submitTime != null ? getFormattedTime(docdata.submitTime.toDate()) : "false"}\nScore: ${docdata.finalScore}/${docdata.maxScore}\n`);
         })
         menu();
     })
@@ -233,4 +268,16 @@ function emailInterview(docRef) {
             menu();
         })
     })
+}
+
+/**
+ * Returns the formatted time
+ * Source: https://stackoverflow.com/questions/4744299/how-to-get-datetime-in-javascript
+ * @param {*} time 
+ */
+function getFormattedTime(time) {
+    var today = new Date();
+    var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+    var time = today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();
+    return date + ' ' + time;
 }
